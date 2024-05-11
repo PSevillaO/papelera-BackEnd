@@ -9,7 +9,7 @@ const customersSchema = new Schema({
     horario: { type: String, required: false, trim: true },
     telefono: { type: String, required: false, trim: true },
     email: { type: String, required: false, trim: true },
-    obs: { type: String, required: true, trim: true },
+    obs: { type: String, required: false, trim: true },
 });
 
 module.exports = mongoose.model('Customers', customersSchema);

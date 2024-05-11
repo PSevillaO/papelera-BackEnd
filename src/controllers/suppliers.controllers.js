@@ -86,10 +86,11 @@ async function deleteSuppliers(req, res) {
         // })
         // }
         const id = req.params.id
+        console.log(id)
 
         const suppliersDeleted = await Suppliers.findByIdAndDelete(id)
 
-        if (!suppilersDeleted) {
+        if (!suppliersDeleted) {
             return res.status(404).send({
                 ok: false,
                 messege: "No se encontro el Proveedor"

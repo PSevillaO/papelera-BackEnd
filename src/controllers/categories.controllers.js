@@ -173,9 +173,56 @@ async function deleteCategoryAndChildren(category) {
     }
 }
 
+async function searchCategory(req, res) {
+    try {
+        const searchTerm = req.params.search;
+        if (!searchTerm) {
+            return res.status(400).send({
+                ok: false,
+                message: "Se requiere un término de búsqueda"
+            });
+        }
+
+        const regex = new RegExp(searchTerm, 'i');
+
+        const category = await Category.find({
+            $or: [
+                { nombre: regex },
+                { descripcion: regex }
+            ]
+        });
+
+        if (!category.length) {
+            return res.send({
+                ok: true,
+                message: "No se encontraron las categorias",
+                category: []
+            });
+        }
+
+        return res.send({
+            ok: true,
+            message: "Categorias encontradas",
+            category
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({
+            ok: false,
+            message: "No se pudo realizar la búsqueda de categias"
+        });
+    }
+}
+
+
+
+
+
 module.exports = {
     getCategories,
     createCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    searchCategory
 }

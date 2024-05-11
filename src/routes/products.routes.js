@@ -8,11 +8,11 @@ const productController = require('../controllers/products.controllers');
 
 router.get('/products/:id?', productController.getProduct);
 
-router.post('/products', productController.createProduct)
+router.post('/products', uploadImage, productController.createProduct)
 
 router.delete('/products/:id', productController.deleteProduct)
 
-router.put('/products/:id', productController.updateProduct)
+router.put('/products/:id', uploadImage, productController.updateProduct)
 
 router.get('/products/search/:search', productController.searchProducts);
 

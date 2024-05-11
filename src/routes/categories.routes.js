@@ -14,6 +14,7 @@ router.put('/categories/:id?', uploadImage, categoryControllers.updateCategory)
 
 router.delete('/categories/:id?', categoryControllers.deleteCategory)
 
+router.get('/categories/search/:search', categoryControllers.searchCategory);
 
 
 module.exports = router;

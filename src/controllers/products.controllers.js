@@ -1,11 +1,15 @@
 const Product = require('../models/product.models');
+const Supplier = require('../models/suppliers.models');
 
 async function getProduct(req, res) {
     try {
         const id = req.params.id;
 
         if (id) {
-            const product = await Product.findById(id).populate("category")
+            const product = await Product.findById(id).populate("category").populate({
+                path: 'suppliers',
+                model: 'Suppliers'
+            })
             if (!product) {
                 return res.status(404).send({
                     ok: false,
@@ -19,15 +23,19 @@ async function getProduct(req, res) {
             })
         }
         // aca controlo la cantidad de registros que devuelvo
-        const limit = parseInt(req.query.limit) || 3;
+        const limit = parseInt(req.query.limit) || 10;
         const page = parseInt(req.query.page) || 0;
 
         const products = await Product.find()
             .populate("category")
+            .populate({
+                path: 'suppliers',
+                model: 'Suppliers'
+            })
             .limit(limit)
             .skip(page * limit)
             .collation({ locale: 'es' })
-            .sort({ title: 1 })
+        // .sort({ title: 1 })
 
         const total = await Product.countDocuments();
 
@@ -48,6 +56,7 @@ async function getProduct(req, res) {
 
 
     } catch (error) {
+        console.log(error)
         res.status(500).send({
             ok: false,
             message: "No se pudo obtener el Producto"
@@ -55,40 +64,70 @@ async function getProduct(req, res) {
     }
 }
 
+// async function createProduct(req, res) {
+//     try {
+//         const product = new Product(req.body)
+//         console.log(product)
+
+//         // con esto cargo el nombre de la imagen en el usuario
+//         if (req.file?.filename) {
+//             product.image = req.file.filename;
+//         }
+//         const prodcutSave = await product.save();
+//         res.status(201).send({
+//             ok: true,
+//             message: "Producto Creado correctamente",
+//             product: prodcutSave
+//         });
+//     } catch (error) {
+//         console.error(error)
+//         res.status(500).send({
+//             ok: false,
+//             message: "No se pudo crear el producto"
+//         });
+//     }
+// }
 
 async function createProduct(req, res) {
     try {
-        const product = new Product(req.body)
+        const { articulo, descripcion, detalle, presentacion, unidad, precio, category, stock, suppliers } = req.body;
 
-        // con esto cargo el nombre de la imagen en el usuario
-        if (req.file?.filename) {
-            product.image = req.file.filename;
-        }
-        const prodcutSave = await product.save();
-        res.status(201).send({
-            ok: true,
-            message: "Producto Creado correctamente",
-            product: prodcutSave
+        // Convertir los IDs de los proveedores en objetos
+        const supplierObjects = await Promise.all(suppliers.map(async supplierId => {
+            const supplier = await Supplier.findById(supplierId);
+            return supplier;
+        }));
+
+        const product = new Product({
+            articulo,
+            descripcion,
+            detalle,
+            presentacion,
+            unidad,
+            precio,
+            category,
+            stock,
+            suppliers: supplierObjects // Aquí se asignan los objetos de proveedores convertidos
         });
+
+        await product.save();
+
+        res.status(201).json({ product });
     } catch (error) {
-        console.error(error)
-        res.status(500).send({
-            ok: false,
-            message: "No se pudo crear el producto"
-        });
+        console.error(error);
+        res.status(500).json({ error: 'Error al crear el producto' });
     }
 }
-
 async function deleteProduct(req, res) {
     try {
         // comprobar que la persona que desea borrar es un admin
 
-        if (req.user.role !== 'ADMIN_ROLE') {
-            return res.status(401).send({
-                ok: false,
-                message: "No tienes permisos para realizar esta acción"
-            })
-        }
+        // if (req.user.role !== 'ADMIN_ROLE') {
+        //     return res.status(401).send({
+        //         ok: false,
+        //         message: "No tienes permisos para realizar esta acción"
+        //     })
+        // }
         const id = req.params.id
 
         const productDeleted = await Product.findByIdAndDelete(id)
@@ -107,21 +146,13 @@ async function deleteProduct(req, res) {
     } catch (error) {
         res.status(500).send({
             ok: false,
-            message: "No se pudo borrar el producto"
+            message: "No se pudo borrar el producto",
+            error: error
         });
     }
 }
-
-
 async function updateProduct(req, res) {
     try {
-
-        if (req.user.role !== 'ADMIN_ROLE') {
-            return res.status(403).send({
-                ok: false,
-                message: "No tienes permisos para realizar esta acción"
-            })
-        }
 
         const id = req.params.id;
         const nuevosValores = req.body;
@@ -147,6 +178,8 @@ async function updateProduct(req, res) {
     }
 }
 
+
+
 async function searchProducts(req, res) {
     try {
         const searchTerm = req.params.search;
@@ -161,10 +194,14 @@ async function searchProducts(req, res) {
 
         const product = await Product.find({
             $or: [
-                { title: regex },
-                { info: regex }
+                { articulo: regex },
+                { descripcion: regex }
             ]
-        });
+        }).populate("category")
+            .populate({
+                path: 'suppliers',
+                model: 'Suppliers'
+            });
 
         if (!product.length) {
             return res.send({

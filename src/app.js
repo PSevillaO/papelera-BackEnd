@@ -9,6 +9,8 @@ const categoriesRoutes = require("./routes/categories.routes");
 const suppliersRoutes = require('./routes/suppliers.routes')
 const customersRoutes = require('./routes/customers.routes')
 const userRoutes = require('./routes/user.routes')
+const ordersRoutes = require('./routes/orders.routes')
+const priceRoutes = require('./routes/price.routes')
 
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -23,7 +25,9 @@ app.use([
     categoriesRoutes,
     suppliersRoutes,
     customersRoutes,
-    userRoutes
+    userRoutes,
+    ordersRoutes,
+    priceRoutes
 ])
 
 

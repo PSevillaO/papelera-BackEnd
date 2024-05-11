@@ -16,6 +16,11 @@ const categorySchema = new Schema({
         trim: true,
         maxlength: 255
     },
+    porcentaje: {
+        type: Number,
+        require: false,
+        trim: true
+    },
     parent: {
         type: Schema.Types.ObjectId,
         ref: 'Category',
